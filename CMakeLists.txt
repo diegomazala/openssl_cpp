@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 
-project(openssl_cpp_project)
+project(openssl_cpp_main)
 
 set(CMAKE_CXX_STANDARD 14)
 
