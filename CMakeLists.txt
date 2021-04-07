@@ -46,6 +46,9 @@ set(HEADERS
     ${OPENSSLPP_HEADERS}/random.h
 
     ${OPENSSLPP_HEADERS}/details/common.h
+
+    ${OPENSSLPP_HEADERS}/base64_dll.h
+    ${OPENSSLPP_HEADERS}/base64_dll.cpp
     )
 
 add_library(${PROJECT_NAME} STATIC ${HEADERS})

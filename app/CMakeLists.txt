@@ -62,3 +62,22 @@ project(app_sha)
 add_executable(${PROJECT_NAME} app_sha.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
+
+
+###########################################################################
+#
+# app_xor
+#
+project(app_xor)
+add_executable(${PROJECT_NAME} app_xor.cpp)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+
+###########################################################################
+#
+# app_base64_dll
+#
+project(app_base64_dll)
+add_executable(${PROJECT_NAME} app_base64_dll.cpp)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})
