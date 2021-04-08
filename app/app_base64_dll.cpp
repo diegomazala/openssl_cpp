@@ -7,8 +7,13 @@
 int main()
 {
 	{
-		unsigned char data[] = "test";
-		std::cout << sizeof(data) << std::endl;
+		base64_encode_text_file("c:/tmp/crypto/template.txt", "c:/tmp/crypto/out_encoded.txt");
+		base64_decode_text_file("c:/tmp/crypto/out_encoded.txt", "c:/tmp/crypto/out_decoded.txt");
+	}
+	return 0;
+
+	{
+		unsigned char data[] = "hello world";
 
 		char* encoded_data;
 		int encoded_length = 0;
@@ -20,7 +25,7 @@ int main()
 
 		base64_decode((void*)encoded_data, encoded_length, &decoded_data, decoded_length);
 
-		std::cout << decoded_data << std::endl;
+		std::cout << "decoded: " << decoded_data << std::endl;
 	}
 
 	{
