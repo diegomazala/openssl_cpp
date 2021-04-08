@@ -5,7 +5,7 @@
 #include <cassert>
 #include <iostream>
 
-int main()
+void test_01()
 {
     auto newAes = opensslpp::Aes256Cbc::createNewKey();
     assert(newAes != nullptr);
@@ -28,14 +28,17 @@ int main()
 
     assert(plainText == std::string(reinterpret_cast<char*>(plainData.data()), plainData.size()));
 
+    std::cout << "key      : " << base64Key << std::endl;
 
-	std::cout << "key      : " << base64Key << std::endl;
-	std::cout << "encrypted: " << plainText << std::endl;
+    std::cout << "decrypted: ";
+    for (auto v : plainData)
+        std::cout << v;
+    std::cout << std::endl;
+}
 
-	std::cout << "decrypted: ";
-	for (auto v : plainData)
-		std::cout << v;
-	std::cout << std::endl;
+int main()
+{
+    test_01();
 
     return EXIT_SUCCESS;
 }

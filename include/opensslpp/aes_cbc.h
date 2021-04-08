@@ -18,6 +18,22 @@ namespace opensslpp
 
         static constexpr decltype(EVP_aes_256_cbc)* Mode = &EVP_aes_256_cbc;
 
+        static Iv getTestIV()
+        {
+            return { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6 };
+        }
+
+		static std::unique_ptr<AesCbc> getTestKey()
+		{
+			auto random = Random::create();
+			if (!random)
+				return nullptr;
+
+            Key key = { "¬­5Ð} öxcO¦ëµ\fü†\b§~\x18±#f" };
+
+			return std::unique_ptr<AesCbc>(new AesCbc(std::move(random), std::move(key)));
+		}
+
         static std::unique_ptr<AesCbc> createNewKey()
         {
             auto random = Random::create();
@@ -55,6 +71,7 @@ namespace opensslpp
             return key_;
         }
 
+
         bool encrypt(const std::string& plainText, std::vector<uint8_t>& cipher, Iv& iv) const
         {
             return encrypt(reinterpret_cast<const uint8_t*>(plainText.c_str()), plainText.size(), cipher, iv);
@@ -84,6 +101,36 @@ namespace opensslpp
 
             return true;
         }
+
+
+		bool encrypt(const std::string& plainText, std::vector<uint8_t>& cipher) const
+		{
+			return encrypt(reinterpret_cast<const uint8_t*>(plainText.c_str()), plainText.size(), cipher);
+		}
+
+		bool encrypt(const uint8_t* plainData, size_t plainDataSize, std::vector<uint8_t>& cipher) const
+		{
+            Iv iv = getTestIV();
+
+			CipherContextPtr context(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+			if (!context)
+				return false;
+
+			if (EVP_EncryptInit_ex(context.get(), EVP_aes_256_cbc(), nullptr, key_.data(), iv.data()) != Success)
+				return false;
+
+			cipher.resize(getCipherSize(plainDataSize));
+
+			int size = 0;
+
+			if (EVP_EncryptUpdate(context.get(), cipher.data(), &size, plainData, static_cast<int>(plainDataSize)) != Success)
+				return false;
+
+			if (EVP_EncryptFinal_ex(context.get(), cipher.data() + size, &size) != Success)
+				return false;
+
+			return true;
+		}
 
         bool decrypt(const std::vector<uint8_t>& cipher, const Iv& iv, std::vector<uint8_t>& plainData) const
         {

@@ -75,9 +75,9 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 ###########################################################################
 #
-# app_base64_dll
+# app_crypto_dll
 #
-project(app_base64_dll)
-add_executable(${PROJECT_NAME} app_base64_dll.cpp)
+project(app_crypto_dll)
+add_executable(${PROJECT_NAME} app_crypto_dll.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARIES})

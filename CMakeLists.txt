@@ -47,8 +47,8 @@ set(HEADERS
 
     ${OPENSSLPP_HEADERS}/details/common.h
 
-    ${OPENSSLPP_HEADERS}/base64_dll.h
-    ${OPENSSLPP_HEADERS}/base64_dll.cpp
+    ${OPENSSLPP_HEADERS}/crypto.h
+    ${OPENSSLPP_HEADERS}/crypto.cpp
     )
 
 add_library(${PROJECT_NAME} STATIC ${HEADERS})
