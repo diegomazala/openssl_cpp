@@ -46,6 +46,8 @@ namespace crypto
             this.label3 = new System.Windows.Forms.Label();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.keyGenerateButton = new System.Windows.Forms.Button();
+            this.saveKeyFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.SuspendLayout();
             // 
             // label1
@@ -171,11 +173,26 @@ namespace crypto
             // 
             this.openFileDialog.AddExtension = false;
             // 
+            // keyGenerateButton
+            // 
+            this.keyGenerateButton.Location = new System.Drawing.Point(343, 101);
+            this.keyGenerateButton.Name = "keyGenerateButton";
+            this.keyGenerateButton.Size = new System.Drawing.Size(37, 23);
+            this.keyGenerateButton.TabIndex = 12;
+            this.keyGenerateButton.Text = "Key";
+            this.keyGenerateButton.UseVisualStyleBackColor = true;
+            this.keyGenerateButton.Click += new System.EventHandler(this.keyGenerateButton_Click);
+            // 
+            // saveKeyFileDialog
+            // 
+            this.saveKeyFileDialog.DefaultExt = "key";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(398, 172);
+            this.Controls.Add(this.keyGenerateButton);
             this.Controls.Add(this.OutputFileButton);
             this.Controls.Add(this.OutputFileTextBox);
             this.Controls.Add(this.label3);
@@ -212,6 +229,8 @@ namespace crypto
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
+        private System.Windows.Forms.Button keyGenerateButton;
+        private System.Windows.Forms.SaveFileDialog saveKeyFileDialog;
     }
 }
 

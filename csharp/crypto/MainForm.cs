@@ -92,5 +92,23 @@ namespace crypto
             }
         }
 
+        private void keyGenerateButton_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to generate a new key", 
+                this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) 
+                != DialogResult.Yes)
+                return;
+
+            if (saveKeyFileDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            if (!crypto_dll.aes_cbc_create_key(saveKeyFileDialog.FileName))
+            {
+                MessageBox.Show("Key generation failed", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            KeyFileTextBox.Text = saveKeyFileDialog.FileName;
+        }
     }
 }
