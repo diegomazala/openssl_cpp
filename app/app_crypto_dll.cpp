@@ -21,17 +21,24 @@ int main()
 		}
 		{
 			std::cout << "Encoding ..." << std::endl;
-			aes_cbc_encode(
+			aes_cbc_encode_to_file(
 				input_data_filename,
 				aes_key_filename,
 				aes_enc_filename);
 		}
 		{
 			std::cout << "Decoding ..." << std::endl;
-			aes_cbc_decode(
+			aes_cbc_decode_to_file(
 				aes_enc_filename,
 				aes_key_filename,
 				aes_dec_filename);
+
+			char data[256];
+			int length = aes_cbc_decode_to_str(
+				aes_enc_filename,
+				aes_key_filename,
+				data);
+			std::cout << length << std::endl << data << std::endl;
 		}
 		{
 			std::cout << "Checking data ..." << std::endl;

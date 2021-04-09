@@ -112,6 +112,7 @@ namespace License_Generator
             // openFileDialog
             // 
             this.openFileDialog.DefaultExt = "key";
+            this.openFileDialog.Filter = "\"key files (*.key)|*.key|All files (*.*)|*.*\";";
             // 
             // openKeyFileButon
             // 
@@ -136,6 +137,7 @@ namespace License_Generator
             // saveFileDialog
             // 
             this.saveFileDialog.DefaultExt = "aa";
+            this.saveFileDialog.Filter = "\"aa files (*.aa)|*.aa|All files (*.*)|*.*\";";
             // 
             // endDateTimePicker
             // 

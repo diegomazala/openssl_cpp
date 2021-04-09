@@ -8,6 +8,7 @@
 #include <opensslpp/base64.h>
 #include <opensslpp/aes_cbc.h>
 
+
 void base64_encode(const void* in_data, int in_length, char** out_data, int& out_length)
 {
 	const auto pl = 4 * ((in_length + 2) / 3);
@@ -87,7 +88,7 @@ bool aes_cbc_create_key(const char* out_filename)
 }
 
 
-bool aes_cbc_encode(
+bool aes_cbc_encode_to_file(
 	const char* in_filename_data, 
 	const char* in_filename_key, 
 	const char* out_filename_data)
@@ -123,7 +124,7 @@ bool aes_cbc_encode(
 }
 
 
-bool aes_cbc_decode(
+bool aes_cbc_decode_to_file(
 	const char* in_filename_data,
 	const char* in_filename_key,
 	const char* out_filename_data)
@@ -159,5 +160,44 @@ bool aes_cbc_decode(
 			<< "Error: Could not decode " << in_filename_data << std::endl
 			<< e.what() << std::endl;
 		return false;
+	}
+}
+
+
+
+int aes_cbc_decode_to_str(
+	const char* in_filename_data,
+	const char* in_filename_key,
+	char* out_decoded_data)
+{
+	try
+	{
+		std::vector<uint8_t> cipher;
+		{
+			std::ifstream in_file_data(in_filename_data, std::ios::in | std::ios::binary | std::ios::ate);
+			auto fsize = in_file_data.tellg();
+			in_file_data.seekg(0, std::ios::beg);
+			cipher.resize(fsize);
+			in_file_data.read(reinterpret_cast<char*>(&cipher[0]), fsize);
+		}
+
+		std::ifstream in_file_key(in_filename_key, std::ifstream::in);
+		std::stringstream in_buffer_key;
+		in_buffer_key << in_file_key.rdbuf();
+
+		auto aes = opensslpp::Aes256Cbc::createWithKey(in_buffer_key.str());
+		std::vector<uint8_t> decoded;
+		if (!aes->decrypt(cipher, decoded)) throw("Exception: Failed decrypting");
+
+		decoded.push_back('\0');
+		memcpy(out_decoded_data, decoded.data(), decoded.size());
+		return decoded.size();
+	}
+	catch (const std::exception& e)
+	{
+		std::cout
+			<< "Error: Could not decode " << in_filename_data << std::endl
+			<< e.what() << std::endl;
+		return 0;
 	}
 }

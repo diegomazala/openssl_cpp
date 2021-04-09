@@ -22,10 +22,13 @@ namespace License_Generator
             public static extern bool aes_cbc_create_key(string out_filename);
 
             [DllImport("openssl_cpp_crypto")]
-            public static extern bool aes_cbc_encode(string in_filename_data, string in_filename_key, string out_filename_data);
+            public static extern bool aes_cbc_encode_to_file(string in_filename_data, string in_filename_key, string out_filename_data);
 
             [DllImport("openssl_cpp_crypto")]
-            public static extern bool aes_cbc_decode(string in_filename_data, string in_filename_key, string out_filename_data);
+            public static extern bool aes_cbc_decode_to_file(string in_filename_data, string in_filename_key, string out_filename_data);
+
+            [DllImport("openssl_cpp_crypto")]
+            public static extern int aes_cbc_decode_to_str(string in_filename_data, string in_filename_key, StringBuilder out_decoded_data);
         }
 
         public class LicenseData
@@ -63,7 +66,7 @@ namespace License_Generator
             var jsonString = JsonSerializer.Serialize(license);
             File.WriteAllText(jsonFilename, jsonString);
 
-            if (crypto_dll.aes_cbc_encode(jsonFilename, keyFileTextBox.Text, saveFileDialog.FileName))
+            if (crypto_dll.aes_cbc_encode_to_file(jsonFilename, keyFileTextBox.Text, saveFileDialog.FileName))
                 MessageBox.Show("License file generated successfully", this.Text);
             else
                 MessageBox.Show("License file generated failed", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);

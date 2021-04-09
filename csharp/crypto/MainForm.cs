@@ -19,10 +19,13 @@ namespace crypto
             public static extern bool aes_cbc_create_key(string out_filename);
 
             [DllImport("openssl_cpp_crypto")]
-            public static extern bool aes_cbc_encode(string in_filename_data, string in_filename_key, string out_filename_data);
+            public static extern bool aes_cbc_encode_to_file(string in_filename_data, string in_filename_key, string out_filename_data);
 
             [DllImport("openssl_cpp_crypto")]
-            public static extern bool aes_cbc_decode(string in_filename_data, string in_filename_key, string out_filename_data);
+            public static extern bool aes_cbc_decode_to_file(string in_filename_data, string in_filename_key, string out_filename_data);
+
+            [DllImport("openssl_cpp_crypto")]
+            public static extern int aes_cbc_decode_to_str(string in_filename_data, string in_filename_key, StringBuilder out_decoded_data);
         }
 
         public MainForm()
@@ -40,8 +43,8 @@ namespace crypto
 
         private void InputFileButton_Click(object sender, EventArgs e)
         {
-            openKeyFileDialog.ShowDialog();
-            InputFileTextBox.Text = openKeyFileDialog.FileName;
+            openFileDialog.ShowDialog();
+            InputFileTextBox.Text = openFileDialog.FileName;
         }
 
         private void OutputFileButton_Click(object sender, EventArgs e)
@@ -52,7 +55,7 @@ namespace crypto
 
         private void EncodeButton_Click(object sender, EventArgs e)
         {
-            if (crypto_dll.aes_cbc_encode(InputFileTextBox.Text, KeyFileTextBox.Text, OutputFileTextBox.Text))
+            if (crypto_dll.aes_cbc_encode_to_file(InputFileTextBox.Text, KeyFileTextBox.Text, OutputFileTextBox.Text))
                 InfoTextBox.Text = "File encoded successfully";
             else
                 InfoTextBox.Text = "Encode failed";
@@ -60,10 +63,21 @@ namespace crypto
 
         private void DecodeButton_Click(object sender, EventArgs e)
         {
-            if (crypto_dll.aes_cbc_decode(InputFileTextBox.Text, KeyFileTextBox.Text, OutputFileTextBox.Text))
+            if (crypto_dll.aes_cbc_decode_to_file(InputFileTextBox.Text, KeyFileTextBox.Text, OutputFileTextBox.Text))
                 InfoTextBox.Text = "File decoded successfully";
             else
                 InfoTextBox.Text = "Decode failed";
+
+            StringBuilder str = new StringBuilder(1024);
+            int str_size = crypto_dll.aes_cbc_decode_to_str(InputFileTextBox.Text, KeyFileTextBox.Text, str);
+            if (str_size > 0)
+            {
+                System.IO.File.WriteAllText(System.IO.Path.ChangeExtension(OutputFileTextBox.Text, ".json"), str.ToString());
+            }
+            else
+            {
+                MessageBox.Show("Decode failed", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         protected void LoadConfig()
