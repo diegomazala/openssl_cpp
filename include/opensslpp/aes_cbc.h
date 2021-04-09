@@ -18,10 +18,21 @@ namespace opensslpp
 
         static constexpr decltype(EVP_aes_256_cbc)* Mode = &EVP_aes_256_cbc;
 
-        static Iv getTestIV()
+        static Iv getTestIv()
         {
             return { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6 };
         }
+
+		static Iv getIvFromKey(const std::string& base64Key)
+		{
+            if (base64Key.size() > IvSize)
+            {
+                Iv iv;
+                std::copy(base64Key.begin(), base64Key.begin() + IvSize, iv.data());
+                return iv;
+            }
+            return getTestIv();
+		}
 
 		static std::unique_ptr<AesCbc> getTestKey()
 		{
@@ -110,7 +121,7 @@ namespace opensslpp
 
 		bool encrypt(const uint8_t* plainData, size_t plainDataSize, std::vector<uint8_t>& cipher) const
 		{
-            Iv iv = getTestIV();
+            Iv iv = getIvFromKey(base64Key());
 
 			CipherContextPtr context(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
 			if (!context)
@@ -158,6 +169,35 @@ namespace opensslpp
 
             return true;
         }
+
+		bool decrypt(const std::vector<uint8_t>& cipher, std::vector<uint8_t>& plainData) const
+		{
+            Iv iv = getIvFromKey(base64Key());
+
+			CipherContextPtr context(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
+			if (!context)
+				return false;
+
+			if (EVP_DecryptInit_ex(context.get(), EVP_aes_256_cbc(), nullptr, key_.data(), iv.data()) != Success)
+				return false;
+
+			plainData.resize(cipher.size());
+
+			int size = 0;
+			if (EVP_DecryptUpdate(context.get(), plainData.data(), &size, cipher.data(), static_cast<int>(cipher.size())) != Success)
+				return false;
+
+			auto plainDataSize = size;
+
+			if (EVP_DecryptFinal_ex(context.get(), plainData.data() + size, &size) != Success)
+				return false;
+
+			plainDataSize += size;
+
+			plainData.resize(plainDataSize);
+
+			return true;
+		}
 
         static constexpr size_t getCipherSize(size_t plainSize)
         {

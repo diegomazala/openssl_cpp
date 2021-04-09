@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 
-project(openssl_cpp_main)
+project(openssl_cpp_crypto)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -51,7 +51,8 @@ set(HEADERS
     ${OPENSSLPP_HEADERS}/crypto.cpp
     )
 
-add_library(${PROJECT_NAME} STATIC ${HEADERS})
+add_library(${PROJECT_NAME} SHARED ${HEADERS})
+target_link_libraries(${PROJECT_NAME} ${OPENSSLPP_ADDITIONAL_LIBS} ${OPENSSL_CRYPTO_LIBRARY})
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
 

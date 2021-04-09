@@ -90,8 +90,7 @@ bool aes_cbc_create_key(const char* out_filename)
 bool aes_cbc_encode(
 	const char* in_filename_data, 
 	const char* in_filename_key, 
-	const char* out_filename_data, 
-	const char* out_filename_iv)
+	const char* out_filename_data)
 {
 	try
 	{
@@ -108,15 +107,11 @@ bool aes_cbc_encode(
 		if (aes == nullptr || aes->base64Key() != in_buffer_key.str()) throw;
 		
 		std::vector<uint8_t> cipher;
-		opensslpp::Aes256Cbc::Iv iv;
 
-		if (!aes->encrypt(in_buffer_data.str(), cipher, iv)) throw;
+		if (!aes->encrypt(in_buffer_data.str(), cipher)) throw;
 
 		std::ofstream out_file_data(out_filename_data, std::ios::out | std::ios::binary);
 		out_file_data.write(reinterpret_cast<const char*>(cipher.data()), cipher.size());
-
-		std::ofstream out_file_iv(out_filename_iv, std::ios::out | std::ios::binary);
-		out_file_iv.write(reinterpret_cast<const char*>(iv.data()), iv.size());
 
 		return true; 
 	}
@@ -131,7 +126,6 @@ bool aes_cbc_encode(
 bool aes_cbc_decode(
 	const char* in_filename_data,
 	const char* in_filename_key,
-	const char* in_filename_iv,
 	const char* out_filename_data)
 {
 	try
@@ -145,14 +139,6 @@ bool aes_cbc_decode(
 			in_file_data.read(reinterpret_cast<char*>(&cipher[0]), fsize);
 		}
 
-		opensslpp::Aes256Cbc::Iv iv;
-		{
-			std::ifstream in_file_iv(in_filename_iv, std::ios::in | std::ios::binary | std::ios::ate);
-			auto fsize = in_file_iv.tellg();
-			in_file_iv.seekg(0, std::ios::beg);
-			if (fsize != iv.size()) throw("Exception: iv size is invalid");
-			in_file_iv.read(reinterpret_cast<char*>(&iv[0]), fsize);
-		}
 
 		std::ifstream in_file_key(in_filename_key, std::ifstream::in);
 		std::stringstream in_buffer_key;
@@ -161,7 +147,7 @@ bool aes_cbc_decode(
 		auto aes = opensslpp::Aes256Cbc::createWithKey(in_buffer_key.str());
 
 		std::vector<uint8_t> decoded;
-		if (!aes->decrypt(cipher, iv, decoded)) throw("Exception: Failed decrypting");
+		if (!aes->decrypt(cipher, decoded)) throw("Exception: Failed decrypting");
 
 		std::string decoded_str(decoded.begin(), decoded.end());
 		std::ofstream out_file(out_filename_data, std::ifstream::out);

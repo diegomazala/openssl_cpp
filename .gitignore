@@ -32,3 +32,9 @@
 *.app
 
 build*
+
+obj*
+.vs*
+bin*
+
+* - Copy*

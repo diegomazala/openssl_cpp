@@ -9,9 +9,8 @@
 int main()
 {
 	{
-		const char* input_data_filename = "c:/tmp/crypto/template.txt";
+		const char* input_data_filename = "c:/tmp/crypto/template.json";
 		const char* aes_key_filename = "c:/tmp/crypto/aes_key.txt";
-		const char* aes_iv_filename = "c:/tmp/crypto/aes_iv.bin";
 		const char* aes_enc_filename = "c:/tmp/crypto/aes_enc.bin";
 		const char* aes_dec_filename = "c:/tmp/crypto/aes_dec.txt";
 
@@ -25,15 +24,13 @@ int main()
 			aes_cbc_encode(
 				input_data_filename,
 				aes_key_filename,
-				aes_enc_filename,
-				aes_iv_filename);
+				aes_enc_filename);
 		}
 		{
 			std::cout << "Decoding ..." << std::endl;
 			aes_cbc_decode(
 				aes_enc_filename,
 				aes_key_filename,
-				aes_iv_filename,
 				aes_dec_filename);
 		}
 		{
