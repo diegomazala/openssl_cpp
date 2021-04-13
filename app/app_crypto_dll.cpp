@@ -1,6 +1,7 @@
 
 
 #include <opensslpp/crypto.h>
+#include <opensslpp/aes_cbc.h>
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -8,17 +9,18 @@
 
 int main()
 {
+
 	{
 		const char* input_data_filename = "c:/tmp/crypto/template.json";
-		const char* aes_key_filename = "c:/tmp/crypto/aes_key.txt";
-		const char* aes_enc_filename = "c:/tmp/crypto/aes_enc.bin";
-		const char* aes_dec_filename = "c:/tmp/crypto/aes_dec.txt";
+		const char* aes_key_filename = "c:/tmp/crypto/aes.key";
+		const char* aes_enc_filename = "c:/tmp/crypto/aes.enc";
+		const char* aes_dec_filename = "c:/tmp/crypto/aes_out.json";
 
 		std::cout << "##################### AES_CBC_256 To/From File ##################" << std::endl;
-		{
-			std::cout << "Creating key ..." << std::endl;
-			aes_cbc_create_key(aes_key_filename);
-		}
+		//{
+		//	std::cout << "Creating key ..." << std::endl;
+		//	aes_cbc_create_key(aes_key_filename);
+		//}
 		{
 			std::cout << "Encoding ..." << std::endl;
 			aes_cbc_encode_to_file(
@@ -40,17 +42,34 @@ int main()
 				data);
 			std::cout << length << std::endl << data << std::endl;
 		}
+
 		{
 			std::cout << "Checking data ..." << std::endl;
-			std::ifstream in_file_data(input_data_filename, std::ifstream::in);
-			std::stringstream in_buffer_data;
-			in_buffer_data << in_file_data.rdbuf();
 
-			std::ifstream dec_file_data(aes_dec_filename, std::ifstream::in);
-			std::stringstream dec_buffer_data;
-			dec_buffer_data << dec_file_data.rdbuf();
+			std::vector<uint8_t> in_data;
+			{
+				std::ifstream in_file_data(input_data_filename, std::ifstream::in | std::ifstream::binary);
+				in_file_data.seekg (0, in_file_data.end);
+				int length = in_file_data.tellg();
+				in_file_data.seekg (0, in_file_data.beg);
+				in_data.resize(length);
+				in_file_data.read(reinterpret_cast<char*>(in_data.data()), length);
+				in_file_data.close();
+			}
 
-			if (in_buffer_data.str() == dec_buffer_data.str())
+			std::vector<uint8_t> dec_data;
+			{
+				std::ifstream dec_file_data(aes_dec_filename, std::ifstream::in | std::ifstream::binary);
+				dec_file_data.seekg (0, dec_file_data.end);
+				int length = dec_file_data.tellg();
+				dec_file_data.seekg (0, dec_file_data.beg);
+				dec_data.resize(length);
+				dec_file_data.read(reinterpret_cast<char*>(dec_data.data()), length);
+				dec_file_data.close();
+			}
+
+
+			if (std::string(in_data.begin(), in_data.end()) == std::string(dec_data.begin(), dec_data.end()))
 			{
 				std::cout << "Success: Input and output file content are equal" << std::endl;
 			}
@@ -59,6 +78,7 @@ int main()
 				std::cout << "Fail: Input and output file content are different" << std::endl;
 			}
 		}
+
 		std::cout << "#################################################################" << std::endl;
 	}
 	return 0;

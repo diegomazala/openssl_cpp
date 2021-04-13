@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
 #include <opensslpp/base64.h>
 #include <opensslpp/aes_cbc.h>
 
@@ -14,7 +15,6 @@ void base64_encode(const void* in_data, int in_length, char** out_data, int& out
 	const auto pl = 4 * ((in_length + 2) / 3);
 	*out_data = reinterpret_cast<char*>(calloc(pl + 1, 1)); //+1 for the terminating null that EVP_EncodeBlock adds on
 	out_length = EVP_EncodeBlock(reinterpret_cast<unsigned char*>(*out_data), reinterpret_cast<const unsigned char*>(in_data), in_length);
-	//if (pl != out_length) { std::cerr << "Whoops, encode predicted " << pl << " but we got " << out_length << "\n"; }
 }
 
 
@@ -23,7 +23,6 @@ void base64_decode(const void* in_data, int in_length, unsigned char** out_data,
 	const auto pl = 3 * in_length / 4;
 	*out_data = reinterpret_cast<unsigned char*>(calloc(pl + 1, 1));
 	out_length = EVP_DecodeBlock(*out_data, reinterpret_cast<const unsigned char*>(in_data), in_length);
-	//if (pl != out_length) { std::cerr << "Whoops, decode predicted " << pl << " but we got " << out_length << "\n"; }
 }
 
 
@@ -76,8 +75,9 @@ bool aes_cbc_create_key(const char* out_filename)
 	{
 		auto newAes = opensslpp::Aes256Cbc::createNewKey();
 		if (newAes == nullptr) throw;
-		std::ofstream out_file(out_filename, std::ifstream::out);
-		out_file << newAes->base64Key();
+		std::ofstream out_file(out_filename, std::ifstream::out | std::ios::binary);
+		out_file.write(reinterpret_cast<const char*>(newAes->key().data()), newAes->key().size());
+		out_file.close();
 		return true;
 	}
 	catch (const std::exception& e)
@@ -95,21 +95,37 @@ bool aes_cbc_encode_to_file(
 {
 	try
 	{
-		std::ifstream in_file_data(in_filename_data, std::ifstream::in);
-		std::stringstream in_buffer_data;
-		in_buffer_data << in_file_data.rdbuf();
+		std::vector<uint8_t> in_data;
+		{
+			std::ifstream in_file_data(in_filename_data, std::ifstream::in | std::ifstream::binary);
+			in_file_data.seekg (0, in_file_data.end);
+			int length = in_file_data.tellg();
+			in_file_data.seekg (0, in_file_data.beg);
+			in_data.resize(length);
+			in_file_data.read(reinterpret_cast<char*>(&in_data[0]), length);
+			in_file_data.close();
+		}
 
-		std::ifstream in_file_key(in_filename_key, std::ifstream::in);
-		std::stringstream in_buffer_key;
-		in_buffer_key << in_file_key.rdbuf();
-		
-		auto aes = opensslpp::Aes256Cbc::createWithKey(in_buffer_key.str());
+		opensslpp::Aes256Cbc::Key key;
+		{
+			std::ifstream in_file_key(in_filename_key, std::ifstream::in | std::ifstream::binary);
+			in_file_key.seekg (0, in_file_key.end);
+			int length = in_file_key.tellg();
+			in_file_key.seekg (0, in_file_key.beg);
 
-		if (aes == nullptr || aes->base64Key() != in_buffer_key.str()) throw;
+			char* buffer = new char[length];
+			in_file_key.read(buffer, length);
+			in_file_key.close();
+
+			std::memcpy(key.data(), buffer, length);
+
+			delete[] buffer;
+		}
+		auto aes = opensslpp::Aes256Cbc::createWithKey(key);
+
 		
 		std::vector<uint8_t> cipher;
-
-		if (!aes->encrypt(in_buffer_data.str(), cipher)) throw;
+		if (!aes->encrypt(in_data.data(), in_data.size(), cipher)) throw;
 
 		std::ofstream out_file_data(out_filename_data, std::ios::out | std::ios::binary);
 		out_file_data.write(reinterpret_cast<const char*>(cipher.data()), cipher.size());
@@ -140,19 +156,26 @@ bool aes_cbc_decode_to_file(
 			in_file_data.read(reinterpret_cast<char*>(&cipher[0]), fsize);
 		}
 
+		opensslpp::Aes256Cbc::Key key;
+		std::ifstream in_file_key(in_filename_key, std::ifstream::in | std::ifstream::binary);
+		in_file_key.seekg (0, in_file_key.end);
+		int length = in_file_key.tellg();
+		in_file_key.seekg (0, in_file_key.beg);
 
-		std::ifstream in_file_key(in_filename_key, std::ifstream::in);
-		std::stringstream in_buffer_key;
-		in_buffer_key << in_file_key.rdbuf();
+		char* buffer = new char[length];
+		in_file_key.read(buffer, length);
+		in_file_key.close();
 
-		auto aes = opensslpp::Aes256Cbc::createWithKey(in_buffer_key.str());
+		std::memcpy(key.data(), buffer, length);
+		auto aes = opensslpp::Aes256Cbc::createWithKey(key);
+		delete[] buffer;
 
 		std::vector<uint8_t> decoded;
 		if (!aes->decrypt(cipher, decoded)) throw("Exception: Failed decrypting");
 
-		std::string decoded_str(decoded.begin(), decoded.end());
-		std::ofstream out_file(out_filename_data, std::ifstream::out);
-		out_file << decoded_str;
+		std::ofstream out_file_data(out_filename_data, std::ios::out | std::ios::binary);
+		out_file_data.write(reinterpret_cast<const char*>(decoded.data()), decoded.size());
+
 	}
 	catch (const std::exception& e)
 	{
@@ -181,11 +204,20 @@ int aes_cbc_decode_to_str(
 			in_file_data.read(reinterpret_cast<char*>(&cipher[0]), fsize);
 		}
 
-		std::ifstream in_file_key(in_filename_key, std::ifstream::in);
-		std::stringstream in_buffer_key;
-		in_buffer_key << in_file_key.rdbuf();
+		opensslpp::Aes256Cbc::Key key;
+		std::ifstream in_file_key(in_filename_key, std::ifstream::in | std::ifstream::binary);
+		in_file_key.seekg (0, in_file_key.end);
+		int length = in_file_key.tellg();
+		in_file_key.seekg (0, in_file_key.beg);
 
-		auto aes = opensslpp::Aes256Cbc::createWithKey(in_buffer_key.str());
+		char* buffer = new char[length];
+		in_file_key.read(buffer, length);
+		in_file_key.close();
+
+		std::memcpy(key.data(), buffer, length);
+		auto aes = opensslpp::Aes256Cbc::createWithKey(key);
+		delete[] buffer;
+
 		std::vector<uint8_t> decoded;
 		if (!aes->decrypt(cipher, decoded)) throw("Exception: Failed decrypting");
 

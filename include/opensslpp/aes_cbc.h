@@ -20,15 +20,17 @@ namespace opensslpp
 
         static Iv getTestIv()
         {
-            return { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6 };
+            std::array<uint8_t, IvSize> iv;
+            std::memset(iv.data(), 0, iv.size());
+            return iv;
         }
 
-		static Iv getIvFromKey(const std::string& base64Key)
+		static Iv getIvFromKey(const Key& key)
 		{
-            if (base64Key.size() > IvSize)
+            if (key.size() > IvSize)
             {
                 Iv iv;
-                std::copy(base64Key.begin(), base64Key.begin() + IvSize, iv.data());
+                std::copy(key.begin(), key.begin() + IvSize, iv.data());
                 return iv;
             }
             return getTestIv();
@@ -40,7 +42,8 @@ namespace opensslpp
 			if (!random)
 				return nullptr;
 
-            Key key = { "¬­5Ð} öxcO¦ëµ\fü†\b§~\x18±#f" };
+            Key key;
+            std::memset(key.data(), 0, key.size());
 
 			return std::unique_ptr<AesCbc>(new AesCbc(std::move(random), std::move(key)));
 		}
@@ -70,6 +73,17 @@ namespace opensslpp
                 return nullptr;
 
             return std::unique_ptr<AesCbc>(new AesCbc(std::move(random), std::move(key)));
+        }
+
+        static std::unique_ptr<AesCbc> createWithKey(const Key& key)
+        {
+            auto random = Random::create();
+            if (!random)
+                return nullptr;
+
+            Key k = key;
+
+            return std::unique_ptr<AesCbc>(new AesCbc(std::move(random), std::move(k)));
         }
 
         std::string base64Key() const
@@ -121,7 +135,7 @@ namespace opensslpp
 
 		bool encrypt(const uint8_t* plainData, size_t plainDataSize, std::vector<uint8_t>& cipher) const
 		{
-            Iv iv = getIvFromKey(base64Key());
+            Iv iv = getIvFromKey(key());
 
 			CipherContextPtr context(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
 			if (!context)
@@ -172,7 +186,7 @@ namespace opensslpp
 
 		bool decrypt(const std::vector<uint8_t>& cipher, std::vector<uint8_t>& plainData) const
 		{
-            Iv iv = getIvFromKey(base64Key());
+            Iv iv = getIvFromKey(key());
 
 			CipherContextPtr context(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
 			if (!context)
